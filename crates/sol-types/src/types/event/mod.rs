@@ -1,6 +1,6 @@
 use crate::{
     abi::token::{Token, TokenSeq, WordToken},
-    Result, SolType, Word,
+    Result, SolEventInterface, SolType, Word,
 };
 use alloc::vec::Vec;
 use alloy_primitives::{FixedBytes, Log, LogData, B256};
@@ -149,11 +149,24 @@ pub trait SolEvent: Sized {
     {
         let topics = Self::decode_topics(topics)?;
         let body = Self::abi_decode_data(data, validate)?;
+
         Ok(Self::new(topics, body))
     }
 
     /// Decode the event from the given log object.
     fn decode_log_data(log: &LogData, validate: bool) -> Result<Self> {
+        Self::decode_raw_log(log.topics(), &log.data, validate)
+    }
+
+    /// Decode the event from the given log object, erroring if log topics do not match.
+    fn decode_log_data_strict(log: &LogData, validate: bool) -> Result<Self> {
+        if log.topics()[0] != Self::SIGNATURE_HASH {
+            return Err(crate::Error::InvalidLog {
+                name: "Unknown log",
+                log: Box::new(log.clone()),
+            });
+        }
+
         Self::decode_raw_log(log.topics(), &log.data, validate)
     }
 
