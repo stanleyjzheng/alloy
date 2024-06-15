@@ -30,9 +30,9 @@ pub mod postgres;
 pub mod aliases;
 #[doc(no_inline)]
 pub use aliases::{
-    BlockHash, BlockNumber, ChainId, Selector, StorageKey, StorageValue, TxHash, TxIndex, TxNumber,
-    B128, B256, B512, B64, I128, I16, I160, I256, I32, I64, I8, U128, U16, U160, U256, U32, U512,
-    U64, U8,
+    BlockHash, BlockNumber, BlockTimestamp, ChainId, Selector, StorageKey, StorageValue, TxHash,
+    TxIndex, TxNonce, TxNumber, B128, B256, B512, B64, I128, I16, I160, I256, I32, I64, I8, U128,
+    U16, U160, U256, U32, U512, U64, U8,
 };
 
 #[macro_use]
@@ -51,6 +51,8 @@ pub use common::TxKind;
 
 mod log;
 pub use log::{Log, LogData};
+#[cfg(feature = "serde")]
+mod log_serde;
 
 mod sealed;
 pub use sealed::{Sealable, Sealed};

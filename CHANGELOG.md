@@ -5,6 +5,81 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.6](https://github.com/alloy-rs/core/releases/tag/v0.7.6) - 2024-06-10
+
+### Features
+
+- [primitives] Add additional common aliases ([#654](https://github.com/alloy-rs/core/issues/654))
+- [primitives] Derive `Arbitrary` for Signature ([#652](https://github.com/alloy-rs/core/issues/652))
+- [primitives] Implement `ops::Not` for fixed bytes ([#650](https://github.com/alloy-rs/core/issues/650))
+- [sol-macro] Add return value names to simple getters ([#648](https://github.com/alloy-rs/core/issues/648))
+
+### Miscellaneous Tasks
+
+- [docs] Add doc aliases for `Tx` prefixed names ([#649](https://github.com/alloy-rs/core/issues/649))
+- Update changelog.sh
+- Fix CHANGELOG parsers for uppercase
+
+## [0.7.5](https://github.com/alloy-rs/core/releases/tag/v0.7.5) - 2024-06-04
+
+### Bug Fixes
+
+- [sol-macro] Allow deriving `Default` on contracts ([#645](https://github.com/alloy-rs/core/issues/645))
+- [sol-macro] Overridden event signatures ([#642](https://github.com/alloy-rs/core/issues/642))
+- [primitives] Signed formatting ([#643](https://github.com/alloy-rs/core/issues/643))
+- Fix Log serde for non self describing protocols ([#639](https://github.com/alloy-rs/core/issues/639))
+- Handle 0 for inverting eip155 parity. ([#633](https://github.com/alloy-rs/core/issues/633))
+
+### Documentation
+
+- Update some READMEs ([#641](https://github.com/alloy-rs/core/issues/641))
+
+### Features
+
+- [primitives] Implement TryInto for ParseUnits ([#646](https://github.com/alloy-rs/core/issues/646))
+- [sol-macro] Allow overridden custom errors ([#644](https://github.com/alloy-rs/core/issues/644))
+- Create new method on Param and EventParam ([#634](https://github.com/alloy-rs/core/issues/634))
+
+### Miscellaneous Tasks
+
+- Release 0.7.5
+- [sol-macro] Add suggestion to remove name ([#647](https://github.com/alloy-rs/core/issues/647))
+- Temporarily disable tests that OOM Miri ([#637](https://github.com/alloy-rs/core/issues/637))
+
+## [0.7.4](https://github.com/alloy-rs/core/releases/tag/v0.7.4) - 2024-05-14
+
+### Bug Fixes
+
+- [sol-macro] Json feature ([#629](https://github.com/alloy-rs/core/issues/629))
+
+### Miscellaneous Tasks
+
+- Release 0.7.4
+- Release 0.7.3
+- Fix dyn abi
+- Release 0.7.3
+
+## [0.7.3](https://github.com/alloy-rs/core/releases/tag/v0.7.3) - 2024-05-14
+
+### Documentation
+
+- Update alloy-core homepage link
+
+### Features
+
+- [dyn-abi] Derive `Eq` for `TypedData` ([#623](https://github.com/alloy-rs/core/issues/623))
+- [sol-macro] Allow missing docs for event fields ([#619](https://github.com/alloy-rs/core/issues/619))
+
+### Miscellaneous Tasks
+
+- Release 0.7.3
+- Fix tests ([#624](https://github.com/alloy-rs/core/issues/624))
+- Unused cfgs
+
+### Refactor
+
+- Move `expand` from `sol-macro` to its own crate ([#626](https://github.com/alloy-rs/core/issues/626))
+
 ## [0.7.2](https://github.com/alloy-rs/core/releases/tag/v0.7.2) - 2024-05-02
 
 ### Documentation
@@ -13,6 +88,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Miscellaneous Tasks
 
+- Release 0.7.2
 - [general] Add basic CI workflow for Windows ([#613](https://github.com/alloy-rs/core/issues/613))
 
 ### Other
@@ -673,12 +749,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Cache wasm job ([#197](https://github.com/alloy-rs/core/issues/197))
 - Significant dyn-abi fixes :) ([#168](https://github.com/alloy-rs/core/issues/168))
-- Refactoring `dyn-abi` to performance parity with ethabi ([#144](https://github.com/alloy-rs/core/issues/144))
 - Kuly14/cleanup ([#151](https://github.com/alloy-rs/core/issues/151))
 - Explain alloy vs ethers-rs intention ([#146](https://github.com/alloy-rs/core/issues/146))
 
 ### Refactor
 
+- Refactoring `dyn-abi` to performance parity with ethabi ([#144](https://github.com/alloy-rs/core/issues/144))
 - Rename domain macro and add docs ([#147](https://github.com/alloy-rs/core/issues/147))
 - Rename Sol*::Tuple to Parameters/Arguments  ([#145](https://github.com/alloy-rs/core/issues/145))
 - Do not generate SolCall for return values ([#134](https://github.com/alloy-rs/core/issues/134))

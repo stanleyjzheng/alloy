@@ -11,6 +11,7 @@ use ast::{
 };
 use indexmap::IndexMap;
 use proc_macro2::{Delimiter, Group, Ident, Punct, Spacing, Span, TokenStream, TokenTree};
+use proc_macro_error::{abort, emit_error};
 use quote::{format_ident, quote, TokenStreamExt};
 use std::{
     borrow::Borrow,
@@ -22,8 +23,8 @@ use syn::{ext::IdentExt, parse_quote, Attribute, Error, Result};
 #[macro_use]
 mod macros;
 
-mod ty;
-pub(crate) use ty::expand_type;
+pub mod ty;
+pub use ty::expand_type;
 
 mod contract;
 mod r#enum;
@@ -40,7 +41,9 @@ mod to_abi;
 /// The limit for the number of times to resolve a type.
 const RESOLVE_LIMIT: usize = 32;
 
-/// The [`sol!`](crate::sol!) expansion implementation.
+/// The [`sol!`] expansion implementation.
+///
+/// [`sol!`]: https://docs.rs/alloy-sol-macro/latest/alloy_sol_macro/index.html
 pub fn expand(ast: File) -> Result<TokenStream> {
     ExpCtxt::new(&ast).expand()
 }
@@ -254,12 +257,21 @@ impl<'ast> Visit<'ast> for ExpCtxt<'ast> {
             .push(OverloadedItem::Event(event));
         ast::visit::visit_item_event(self, event);
     }
+
+    fn visit_item_error(&mut self, error: &'ast ItemError) {
+        self.overloaded_items
+            .entry(error.name.as_string())
+            .or_default()
+            .push(OverloadedItem::Error(error));
+        ast::visit::visit_item_error(self, error);
+    }
 }
 
 #[derive(Clone, Copy)]
 enum OverloadedItem<'a> {
     Function(&'a ItemFunction),
     Event(&'a ItemEvent),
+    Error(&'a ItemError),
 }
 
 impl<'ast> From<&'ast ItemFunction> for OverloadedItem<'ast> {
@@ -274,11 +286,18 @@ impl<'ast> From<&'ast ItemEvent> for OverloadedItem<'ast> {
     }
 }
 
+impl<'ast> From<&'ast ItemError> for OverloadedItem<'ast> {
+    fn from(e: &'ast ItemError) -> Self {
+        Self::Error(e)
+    }
+}
+
 impl<'a> OverloadedItem<'a> {
     fn name(self) -> Option<&'a SolIdent> {
         match self {
             Self::Function(f) => f.name.as_ref(),
             Self::Event(e) => Some(&e.name),
+            Self::Error(e) => Some(&e.name),
         }
     }
 
@@ -286,6 +305,7 @@ impl<'a> OverloadedItem<'a> {
         match self {
             Self::Function(_) => "function",
             Self::Event(_) => "event",
+            Self::Error(_) => "error",
         }
     }
 
@@ -293,6 +313,7 @@ impl<'a> OverloadedItem<'a> {
         match (self, other) {
             (Self::Function(a), Self::Function(b)) => a.parameters.types().eq(b.parameters.types()),
             (Self::Event(a), Self::Event(b)) => a.param_types().eq(b.param_types()),
+            (Self::Error(a), Self::Error(b)) => a.parameters.types().eq(b.parameters.types()),
             _ => false,
         }
     }
@@ -301,6 +322,7 @@ impl<'a> OverloadedItem<'a> {
         match self {
             Self::Function(f) => f.span(),
             Self::Event(e) => e.span(),
+            Self::Error(e) => e.span(),
         }
     }
 
@@ -308,6 +330,7 @@ impl<'a> OverloadedItem<'a> {
         match self {
             Self::Function(f) => cx.function_signature(f),
             Self::Event(e) => cx.event_signature(e),
+            Self::Error(e) => cx.error_signature(e),
         }
     }
 }
@@ -487,7 +510,7 @@ impl<'ast> ExpCtxt<'ast> {
             derives.extend(["Debug", "PartialEq", "Eq", "Hash"]);
         }
         let derives = derives.iter().map(|s| Ident::new(s, Span::call_site()));
-        attrs.push(parse_quote! { #[derive(#(#derives),*)] });
+        attrs.push(parse_quote! { #[derive(#(#derives), *)] });
     }
 
     /// Returns an error if any of the types in the parameters are unresolved.
@@ -521,9 +544,9 @@ impl<'ast> ExpCtxt<'ast> {
 ///
 /// These should be added to import lists at the top of anonymous `const _: () = { ... }` blocks,
 /// and in case of top-level structs they should be inlined into all `path`s.
-pub(crate) struct ExternCrates {
-    pub(crate) sol_types: syn::Path,
-    pub(crate) contract: syn::Path,
+pub struct ExternCrates {
+    pub sol_types: syn::Path,
+    pub contract: syn::Path,
 }
 
 impl Default for ExternCrates {
@@ -536,7 +559,7 @@ impl Default for ExternCrates {
 }
 
 impl ExternCrates {
-    pub(crate) fn fill(&mut self, attrs: &SolAttrs) {
+    pub fn fill(&mut self, attrs: &SolAttrs) {
         if let Some(sol_types) = &attrs.alloy_sol_types {
             self.sol_types = sol_types.clone();
         }
@@ -571,7 +594,7 @@ pub fn generate_name(i: usize) -> Ident {
 }
 
 /// Returns the name of a parameter, or a generated name if it is `None`.
-fn anon_name<T: Into<Ident> + Clone>((i, name): (usize, Option<&T>)) -> Ident {
+pub fn anon_name<T: Into<Ident> + Clone>((i, name): (usize, Option<&T>)) -> Ident {
     match name {
         Some(name) => name.clone().into(),
         None => generate_name(i),

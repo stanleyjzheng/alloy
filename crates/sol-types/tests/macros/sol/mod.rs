@@ -1,4 +1,4 @@
-use alloy_primitives::{b256, bytes, hex, keccak256, Address, I256, U256};
+use alloy_primitives::{b256, bytes, hex, keccak256, Address, B256, I256, U256};
 use alloy_sol_types::{sol, SolCall, SolError, SolEvent, SolStruct, SolType};
 use serde::Serialize;
 use serde_json::Value;
@@ -239,6 +239,35 @@ fn getters() {
 }
 
 #[test]
+fn getter_names() {
+    sol! {
+        contract Getters {
+            string public value;
+            string[] public array;
+            mapping(bytes32 => string) public map;
+            mapping(bytes32 k => string v) public mapWithNames;
+
+            mapping(bytes32 k1 => mapping(uint256 k2 => string v2) v1) public nestedMapWithNames;
+        }
+    }
+
+    let _ = Getters::valueCall {};
+    let _ = Getters::valueReturn { value: String::new() };
+
+    let _ = Getters::arrayCall { _0: U256::ZERO };
+    let _ = Getters::arrayReturn { _0: String::new() };
+
+    let _ = Getters::mapCall { _0: B256::ZERO };
+    let _ = Getters::mapReturn { _0: String::new() };
+
+    let _ = Getters::mapWithNamesCall { k: B256::ZERO };
+    let _ = Getters::mapWithNamesReturn { v: String::new() };
+
+    let _ = Getters::nestedMapWithNamesCall { k1: B256::ZERO, k2: U256::ZERO };
+    let _ = Getters::nestedMapWithNamesReturn { v2: String::new() };
+}
+
+#[test]
 fn abigen_sol_multicall() {
     sol!("../syn-solidity/tests/contracts/Multicall.sol");
 
@@ -352,7 +381,7 @@ fn abigen_sol_multicall() {
 #[test]
 fn struct_field_attrs() {
     sol! {
-        #[derive(Serialize, Default)]
+        #[derive(Default, Serialize)]
         struct MyStruct {
             #[serde(skip)]
             uint256 a;
@@ -373,7 +402,7 @@ fn struct_field_attrs() {
 #[test]
 fn enum_variant_attrs() {
     sol! {
-        #[derive(Default, Debug, PartialEq, Eq, Serialize)]
+        #[derive(Debug, Default, PartialEq, Eq, Serialize)]
         enum MyEnum {
             A,
             #[default]
@@ -439,6 +468,7 @@ fn enum_field_of_struct() {
 }
 
 #[test]
+#[cfg(any())] // TODO: https://github.com/alloy-rs/core/issues/599
 fn same_names_different_namespaces() {
     sol! {
         library RouterErrors {
@@ -807,4 +837,91 @@ fn bytecode_attributes() {
 
     assert_eq!(Dummy::BYTECODE[..], hex::decode("1234").unwrap());
     assert_eq!(Dummy::DEPLOYED_BYTECODE[..], hex::decode("5678").unwrap());
+}
+
+#[test]
+fn function_overrides() {
+    mod one {
+        alloy_sol_types::sol! {
+            function testFunction(bytes32 one);
+        }
+    }
+
+    mod two {
+        alloy_sol_types::sol! {
+            function testFunction(bytes32 one);
+            function testFunction(bytes32 one, bytes32 two);
+        }
+    }
+
+    assert_eq!(one::testFunctionCall::SIGNATURE, "testFunction(bytes32)");
+    assert_eq!(one::testFunctionCall::SIGNATURE, two::testFunction_0Call::SIGNATURE);
+
+    assert_eq!(two::testFunction_1Call::SIGNATURE, "testFunction(bytes32,bytes32)");
+}
+
+#[test]
+fn error_overrides() {
+    mod one {
+        alloy_sol_types::sol! {
+            error TestError(bytes32 one);
+        }
+    }
+
+    mod two {
+        alloy_sol_types::sol! {
+            error TestError(bytes32 one);
+            error TestError(bytes32 one, bytes32 two);
+        }
+    }
+
+    assert_eq!(one::TestError::SIGNATURE, "TestError(bytes32)");
+    assert_eq!(one::TestError::SIGNATURE, two::TestError_0::SIGNATURE);
+
+    assert_eq!(two::TestError_1::SIGNATURE, "TestError(bytes32,bytes32)");
+}
+
+// https://github.com/alloy-rs/core/issues/640
+#[test]
+fn event_overrides() {
+    mod one {
+        alloy_sol_types::sol! {
+            event TestEvent(bytes32 indexed one);
+        }
+    }
+
+    mod two {
+        alloy_sol_types::sol! {
+            event TestEvent(bytes32 indexed one);
+            event TestEvent(bytes32 indexed one, bytes32 indexed two);
+        }
+    }
+
+    assert_eq!(one::TestEvent::SIGNATURE, "TestEvent(bytes32)");
+    assert_eq!(one::TestEvent::SIGNATURE, two::TestEvent_0::SIGNATURE);
+    assert_eq!(one::TestEvent::SIGNATURE_HASH, keccak256("TestEvent(bytes32)"));
+    assert_eq!(one::TestEvent::SIGNATURE_HASH, two::TestEvent_0::SIGNATURE_HASH);
+
+    assert_eq!(two::TestEvent_1::SIGNATURE, "TestEvent(bytes32,bytes32)");
+    assert_eq!(two::TestEvent_1::SIGNATURE_HASH, keccak256("TestEvent(bytes32,bytes32)"));
+}
+
+#[test]
+fn contract_derive_default() {
+    sol! {
+        #[derive(Debug, Default)]
+        contract MyContract {
+            function f1();
+            function f2();
+            event e1();
+            event e2();
+            error c();
+        }
+    }
+
+    let MyContract::f1Call {} = MyContract::f1Call::default();
+    let MyContract::f2Call {} = MyContract::f2Call::default();
+    let MyContract::e1 {} = MyContract::e1::default();
+    let MyContract::e2 {} = MyContract::e2::default();
+    let MyContract::c {} = MyContract::c::default();
 }

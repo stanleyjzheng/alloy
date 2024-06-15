@@ -65,13 +65,23 @@ pub type BlockHash = B256;
 /// A block number.
 pub type BlockNumber = u64;
 
+/// A block timestamp.
+pub type BlockTimestamp = u64;
+
 /// A transaction hash is a keccak hash of an RLP encoded signed transaction.
+#[doc(alias = "TransactionHash")]
 pub type TxHash = B256;
 
 /// The sequence number of all existing transactions.
+#[doc(alias = "TransactionNumber")]
 pub type TxNumber = u64;
 
+/// The nonce of a transaction.
+#[doc(alias = "TransactionNonce")]
+pub type TxNonce = u64;
+
 /// The index of transaction in a block.
+#[doc(alias = "TransactionIndex")]
 pub type TxIndex = u64;
 
 /// Chain identifier type (introduced in EIP-155).
