@@ -19,11 +19,6 @@ impl<'de> Deserialize<'de> for Eip712Types {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let map: BTreeMap<String, Vec<PropertyDef>> = BTreeMap::deserialize(deserializer)?;
 
-        for key in map.keys() {
-            // ensure that all types are valid specifiers
-            let _ = TypeSpecifier::parse(key).map_err(serde::de::Error::custom)?;
-        }
-
         Ok(Self(map))
     }
 }
