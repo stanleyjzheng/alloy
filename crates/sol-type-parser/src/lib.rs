@@ -3,18 +3,8 @@
     html_logo_url = "https://raw.githubusercontent.com/alloy-rs/core/main/assets/alloy.jpg",
     html_favicon_url = "https://raw.githubusercontent.com/alloy-rs/core/main/assets/favicon.ico"
 )]
-#![warn(
-    missing_copy_implementations,
-    missing_debug_implementations,
-    missing_docs,
-    unreachable_pub,
-    clippy::missing_const_for_fn,
-    rustdoc::all
-)]
 #![cfg_attr(not(test), warn(unused_crate_dependencies))]
-#![deny(unused_must_use, rust_2018_idioms)]
 #![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(feature = "std", allow(unused_imports))]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
 #[macro_use]
@@ -50,3 +40,8 @@ pub use parameter::{ParameterSpecifier, Parameters, Storage};
 
 /// Generic [`winnow`] parsing utilities.
 pub mod utils;
+
+mod state_mutability;
+#[cfg(feature = "serde")]
+pub use state_mutability::serde_state_mutability_compat;
+pub use state_mutability::StateMutability;

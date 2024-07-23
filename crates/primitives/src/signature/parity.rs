@@ -5,7 +5,7 @@ use crate::{
 
 /// The parity of the signature, stored as either a V value (which may include
 /// a chain id), or the y-parity.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 #[cfg_attr(feature = "arbitrary", derive(derive_arbitrary::Arbitrary, proptest_derive::Arbitrary))]
 pub enum Parity {
     /// Explicit V value. May be EIP-155 modified.
@@ -196,7 +196,6 @@ mod test {
     #[test]
     fn basic_rlp() {
         use crate::hex;
-
         use alloy_rlp::{Decodable, Encodable};
 
         let vector = vec![

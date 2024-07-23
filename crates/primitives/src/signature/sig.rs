@@ -1,3 +1,5 @@
+#![allow(unknown_lints, unnameable_types)]
+
 use crate::{
     hex,
     signature::{Parity, SignatureError},
@@ -99,6 +101,7 @@ impl From<(k256::ecdsa::Signature, k256::ecdsa::RecoveryId)> for Signature<k256:
 
 #[cfg(feature = "rlp")]
 impl crate::Signature {
+    /// Decode an RLP-encoded VRS signature.
     pub fn decode_rlp_vrs(buf: &mut &[u8]) -> Result<Self, alloy_rlp::Error> {
         use alloy_rlp::Decodable;
 
